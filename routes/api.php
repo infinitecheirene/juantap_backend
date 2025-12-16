@@ -41,50 +41,54 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'me']);
 });
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [ProfileController::class, 'show']);   // Fetch profile
+    Route::post('/profile', [ProfileController::class, 'update']); // Update profile
+});
+
+
 Route::get('/admin/users',    [AuthController::class, 'index']);
 
 Route::get('/admin/user/{id}', [AuthController::class, 'getUserById']);
 
 
-// ✅ Resend verification email (requires auth)
-Route::post('/email/verification-notification', function (Request $request) {
-    if ($request->user()->hasVerifiedEmail()) {
-        return response()->json(['message' => 'Already verified'], 400);
-    }
+// // ✅ Resend verification email (requires auth)
+// Route::post('/email/verification-notification', function (Request $request) {
+//     if ($request->user()->hasVerifiedEmail()) {
+//         return response()->json(['message' => 'Already verified'], 400);
+//     }
 
-    $request->user()->sendEmailVerificationNotification();
+//     $request->user()->sendEmailVerificationNotification();
 
-    return response()->json(['status' => 'verification-link-sent']);
-})->middleware(['auth:sanctum']);
+//     return response()->json(['status' => 'verification-link-sent']);
+// })->middleware(['auth:sanctum']);
 
-// ✅ Verify email via signed link
-Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) {
-    // Optional: validate the signed URL manually (already done by 'signed' middleware)
-    if (! URL::hasValidSignature($request)) {
-        abort(403, 'Invalid or expired verification link.');
-    }
+// // ✅ Verify email via signed link
+// Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) {
+//     // Optional: validate the signed URL manually (already done by 'signed' middleware)
+//     if (! URL::hasValidSignature($request)) {
+//         abort(403, 'Invalid or expired verification link.');
+//     }
 
-    $user = User::findOrFail($id);
+//     $user = User::findOrFail($id);
 
-    if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
-        abort(403, 'Invalid verification hash.');
-    }
+//     if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+//         abort(403, 'Invalid verification hash.');
+//     }
 
-    if (! $user->hasVerifiedEmail()) {
-        $user->markEmailAsVerified();
-    }
+//     if (! $user->hasVerifiedEmail()) {
+//         $user->markEmailAsVerified();
+//     }
 
-    return redirect(env('FRONTEND_URL', '/') . '/email-verified-success');
-})->middleware(['signed'])->name('verification.verify');
+//     return redirect(env('FRONTEND_URL', '/') . '/email-verified-success');
+// })->middleware(['signed'])->name('verification.verify');
 
-
-
-// ✅ Check if email is verified
-Route::get('/email/is-verified', function (Request $request) {
-    return response()->json([
-        'email_verified' => $request->user()->hasVerifiedEmail()
-    ]);
-})->middleware('auth:sanctum');
+// // ✅ Check if email is verified
+// Route::get('/email/is-verified', function (Request $request) {
+//     return response()->json([
+//         'email_verified' => $request->user()->hasVerifiedEmail()
+//     ]);
+// })->middleware('auth:sanctum');
 
 // Add to your routes/api.php or routes/web.php
 Route::get('/login', function () {
