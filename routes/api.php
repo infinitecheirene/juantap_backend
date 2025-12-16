@@ -46,7 +46,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update']); // Update profile
 });
 
-
 Route::get('/admin/users',    [AuthController::class, 'index']);
 
 Route::get('/admin/user/{id}', [AuthController::class, 'getUserById']);
