@@ -26,8 +26,6 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
-                'firstname',
-                'lastname',
                 'username',
                 'bio',
                 'phone',
