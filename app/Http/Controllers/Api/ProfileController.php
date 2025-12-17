@@ -117,9 +117,9 @@ public function me(Request $request)
     $user = $request->user()->load(['profile.socialLinks']);
 
     // Get admin accounts
-    $admin = User::where('is_admin', 1)->first();
+    $admin = User::where('role', 1)->first();
 
-    $paymentAccounts = $user->is_admin
+    $paymentAccounts = $user->role
         ? [
             'gcash'   => $user->gcash_account,
             'paymaya' => $user->paymaya_account,
@@ -144,7 +144,7 @@ public function me(Request $request)
        'avatar_url' => $user->profile_image
         ? asset($user->profile_image)
         : asset("avatars/default.png"),
-        'is_admin'     => $user->is_admin,
+        'role'     => $user->role,
         'profile'      => [
             'bio'              => $user->profile->bio ?? '',
             'phone'            => $user->profile->phone ?? '',

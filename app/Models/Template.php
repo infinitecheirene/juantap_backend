@@ -21,6 +21,7 @@ class Template extends Model
         'colors',
         'fonts',
         'layout',
+        'connectStyle',
         'tags',
         'is_popular',
         'is_new',

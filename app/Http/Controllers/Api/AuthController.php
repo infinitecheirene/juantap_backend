@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 use App\Models\User;
 
 class AuthController extends Controller
 {
-    // Register
+    // Register a new user
     public function register(Request $request)
     {
         $request->validate([
@@ -29,12 +30,12 @@ class AuthController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Registered successfully. Please verify your email.',
+            'message' => 'Registered successfully.',
             'user' => $user,
         ], 201);
     }
 
-    // Login
+    // Login user and create token
     public function login(Request $request)
     {
         $request->validate([
@@ -42,32 +43,59 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Invalid credentials'
+            ], 401);
         }
 
-        $user = Auth::user();
+        $user->tokens()->delete();
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $token,
+            'user' => $user,
         ]);
     }
 
-    // Logout
+    // Logout user (revoke all tokens)
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $request->user()->tokens()->delete();
 
-        return response()->json(['message' => 'Logged out successfully']);
+        return response()->json([
+            'message' => 'Logged out successfully'
+        ]);
     }
 
-    // Get current user
+    // Get authenticated user profile
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+
+        // Load profile if it exists
+        $user->loadMissing('profile');
+
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'firstname' => $user->firstname,
+                'lastname' => $user->lastname,
+                'name' => $user->name ?? trim($user->firstname . ' ' . $user->lastname),
+                'email' => $user->email,
+
+                // ✅ display name used by UI dropdown
+                'display_name' => $user->name 
+                    ?? $user->profile->display_name 
+                    ?? trim($user->firstname . ' ' . $user->lastname),
+
+                // profile is always returned (null-safe)
+                'profile' => $user->profile ?? null,
+            ]
+        ]);
     }
 }

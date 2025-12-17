@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UserTemplateController extends Controller
 {
@@ -230,7 +231,7 @@ class UserTemplateController extends Controller
         ]);
 
     } catch (\Exception $e) {
-        \Log::error('fetchBoughted error: ' . $e->getMessage());
+        Log::error('fetchBoughted error: ' . $e->getMessage());
 
         return response()->json([
             'error' => 'Something went wrong',

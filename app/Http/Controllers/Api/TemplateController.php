@@ -19,7 +19,7 @@ class TemplateController extends Controller
         $query->where('is_hidden', $hidden ? 1 : 0);
     } else {
         // If no "hidden" param, and user is not admin, hide hidden templates
-        if (!$request->user() || !$request->user()->is_admin) {
+        if (!$request->user() || !$request->user()->role) {
             $query->where('is_hidden', false);
         }
     }
@@ -41,6 +41,7 @@ class TemplateController extends Controller
             'colors' => $template->colors,
             'fonts' => $template->fonts,
             'layout' => $template->layout,
+            'connectStyle' => $template->connectStyle,
             'tags' => $template->tags,
             'is_popular' => (bool) $template->is_popular,
             'is_new' => (bool) $template->is_new,
@@ -102,6 +103,7 @@ class TemplateController extends Controller
         'colors' => 'nullable|array',
         'fonts' => 'nullable|array',
         'layout' => 'nullable|string',
+        'connectStyle' => 'nullable|string',
         'tags' => 'nullable|array',
         'is_popular' => 'boolean',
         'is_new' => 'boolean',
@@ -163,6 +165,7 @@ public function store(Request $request)
         'colors' => 'nullable|array',
         'fonts' => 'nullable|array',
         'layout' => 'nullable|string',
+        'connectStyle' => 'nullable|string',
         'tags' => 'nullable|array',
         'is_popular' => 'boolean',
         'is_new' => 'boolean',
@@ -192,7 +195,7 @@ public function showById($id)
 
 public function checkSlug($slug)
 {
-    $exists = \App\Models\Template::where('slug', $slug)->exists();
+    $exists = Template::where('slug', $slug)->exists();
 
     return response()->json([
         'exists' => $exists
