@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('social_links', function (Blueprint $table) {
-            $table->string('display_name')->nullable()->after('platform');
+        Schema::create('profile', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
+            $table->string('name');
         });
     }
 
@@ -21,8 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('social_links', function (Blueprint $table) {
-            $table->dropColumn('display_name');
-        });
+        Schema::dropIfExists('profile');
     }
 };
