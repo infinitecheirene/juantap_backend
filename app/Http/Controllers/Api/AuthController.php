@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 
 class AuthController extends Controller
@@ -98,4 +98,26 @@ class AuthController extends Controller
             ]
         ]);
     }
+
+    public function getUser(Request $request)
+{
+    try {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'error' => 'Not logged in'
+            ], 401);
+        }
+
+        return response()->json($user);
+    } catch (\Exception $e) {
+        Log::error('AuthController getUser error: ' . $e->getMessage());
+
+        return response()->json([
+            'error' => 'Server error'
+        ], 500);
+    }
+}
+
 }

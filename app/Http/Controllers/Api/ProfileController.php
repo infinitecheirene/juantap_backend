@@ -114,65 +114,38 @@ class ProfileController extends Controller
 
 public function me(Request $request)
 {
-    $user = $request->user()->load(['profile.socialLinks']);
+    $user = $request->user();
 
-    // Get admin accounts
-    $admin = User::where('role', 1)->first();
+    if (!$user) {
+        return response()->json(['error' => 'Unauthenticated'], 401);
+    }
 
-    $paymentAccounts = $user->role
-        ? [
-            'gcash'   => $user->gcash_account,
-            'paymaya' => $user->paymaya_account,
-            'bpi'     => $user->bpi_account,
-            'bdo'     => $user->bdo_account,
-        ]
-        : [
-            'gcash'   => $admin->gcash_account ?? null,
-            'paymaya' => $admin->paymaya_account ?? null,
-            'bpi'     => $admin->bpi_account ?? null,
-            'bdo'     => $admin->bdo_account ?? null,
-        ];
+    $user->load('profile.socialLinks');
+    $profile = $user->profile;
 
-    $response = [
-        'id'           => $user->id,
-        'name'         => $user->name,
-        'firstname'    => $user->firstname,
-        'lastname'     => $user->lastname,
+    return response()->json([
+        'id' => $user->id,
+        'name' => $user->name,
+        'firstname' => $user->firstname,
+        'lastname' => $user->lastname,
         'display_name' => $user->display_name,
-        'username'     => $user->username,
-        'email'        => $user->email,
-       'avatar_url' => $user->profile_image
-        ? asset($user->profile_image)
-        : asset("avatars/default.png"),
-        'role'     => $user->role,
-        'profile'      => [
-            'bio'              => $user->profile->bio ?? '',
-            'phone'            => $user->profile->phone ?? '',
-            'website'          => $user->profile->website ?? '',
-            'location'         => $user->profile->location ?? '',
-            'template_id'      => $user->profile->template_id,
-            'background_type'  => $user->profile->background_type,
-            'background_value' => $user->profile->background_value,
-            'font_style'       => $user->profile->font_style,
-            'font_size'        => $user->profile->font_size,
-            'button_style'     => $user->profile->button_style,
-            'accent_color'     => $user->profile->accent_color,
-            'nfc_redirect_url' => $user->profile->nfc_redirect_url,
-            'is_published'     => $user->profile->is_published,
-            'socialLinks'      => $user->profile->socialLinks->map(function ($link) {
-                return [
-                    'id'        => $link->id,
-                    'platform'  => $link->platform,
-                    'username'  => $link->display_name,
-                    'url'       => $link->url,
-                    'isVisible' => (bool) $link->is_visible,
-                ];
-            }),
+        'username' => $user->username,
+        'email' => $user->email,
+        'avatar_url' => $profile && $profile->profile_image ? asset($profile->profile_image) : asset("avatars/default.png"),
+        'profile' => [
+            'bio' => $profile->bio ?? '',
+            'phone' => $profile->phone ?? '',
+            'website' => $profile->website ?? '',
+            'location' => $profile->location ?? '',
+            'socialLinks' => $profile ? $profile->socialLinks->map(fn($link) => [
+                'id' => $link->id,
+                'platform' => $link->platform,
+                'username' => $link->display_name,
+                'url' => $link->url,
+                'isVisible' => (bool)$link->is_visible,
+            ]) : [],
         ],
-        'payment_accounts' => $paymentAccounts,
-    ];
-
-    return response()->json($response, 200);
+    ]);
 }
 
 
