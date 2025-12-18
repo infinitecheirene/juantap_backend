@@ -1,17 +1,20 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'register'],
+
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'http://localhost:3000',
-        'https://juantap-profile.vercel.app',
-    ],
+    'allowed_origins' => ['http://localhost:3000'], // your frontend
+
+    'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
-    'supports_credentials' => false,
-];
+    'exposed_headers' => [],
 
+    'max_age' => 0,
+
+    'supports_credentials' => true, // ✅ must be true if using withCredentials
+];

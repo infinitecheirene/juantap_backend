@@ -10,28 +10,22 @@ class User extends Authenticatable
 {
     use HasApiTokens, Notifiable;
 
+    // Fillable columns
     protected $fillable = [
-        'firstname',
-        'lastname',
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
-        'profile_image',
         'role',
     ];
 
+    // Hidden for serialization
     protected $hidden = [
-        'firstname',
-        'lastname',
-        'name',
-        'email',
-        'password',
-        'profile_image',
-        'role',
         'password',
         'remember_token',
     ];
 
+    // Casts
     protected $casts = [
         'password' => 'hashed',
     ];
@@ -42,13 +36,13 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class);
     }
 
-    // Accessor for avatar
+    // Accessors
     protected $appends = ['profile_image_url'];
 
     public function getProfileImageUrlAttribute()
     {
-        return $this->profile_image
-            ? asset('storage/' . $this->profile_image)
+        return $this->profile && $this->profile->profile_photo
+            ? asset('storage/' . $this->profile->profile_photo)
             : asset('defaults/avatar.png');
     }
 }

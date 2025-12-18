@@ -29,7 +29,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink']);
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 
-// Public stats
+// Public templates & stats
 Route::get('/stats/top-templates', [StatsController::class, 'topTemplates']);
 Route::get('/templates', [TemplateController::class, 'index']);
 Route::get('/templates/{slug}', [TemplateController::class, 'show']);
@@ -45,53 +45,89 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user-profile', [ProfileController::class, 'me']); // Current logged-in user
+    Route::get('/user-profile', [ProfileController::class, 'me']); // current user
 
-    // Profile
-    Route::get('/user', [ProfileController::class, 'me']);
-    Route::post('/profile', [ProfileController::class, 'storeOrUpdate']);
-    Route::post('/profile/publish', [ProfileController::class, 'publish']);
+    /*
+    |--------------------------------------------------------------------------
+    | Profile Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'me']); // alias
+        Route::get('/user', [ProfileController::class, 'me']); // logged-in user's profile
+        Route::post('/', [ProfileController::class, 'storeOrUpdate']);
+        Route::post('/publish', [ProfileController::class, 'publish']);
 
-    // Alias for frontend convenience (for /profile/user)
-    Route::get('/profile/user', [ProfileController::class, 'me']); // returns currently logged-in user's profile if logged in
-Route::get('/profile/user/used-templates', [UserTemplateController::class, 'usedTemplates']); // returns logged-in user's used templates
+        // Social links
+        Route::post('/social-links', [SocialLinkController::class, 'store']);
+        Route::put('/social-links/{id}', [SocialLinkController::class, 'update']);
 
+        // User's templates
+        Route::get('/user/used-templates', [UserTemplateController::class, 'usedTemplates']);
+    });
 
-    // Social links
-    Route::post('/profile/social-links', [SocialLinkController::class, 'store']);
-    Route::put('/profile/social-links/{id}', [SocialLinkController::class, 'update']);
+    /*
+    |--------------------------------------------------------------------------
+    | User Template Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('templates')->group(function () {
+        Route::get('/status', [UserTemplateController::class, 'templatesStatus']);
+        Route::get('/saved', [UserTemplateController::class, 'onlySavedTemplates']);
+        Route::post('/saved/{template}', [UserTemplateController::class, 'saveTemplate']);
+        Route::delete('/saved/{template}', [UserTemplateController::class, 'unsaveTemplate']);
 
-    // User templates
-    Route::get('/templates/status', [UserTemplateController::class, 'templatesStatus']);
-    Route::get('/templates1/saved', [UserTemplateController::class, 'onlySavedTemplates']);
-    Route::post('/templates/saved/{template}', [UserTemplateController::class, 'saveTemplate']);
-    Route::delete('/templates/saved/{template}', [UserTemplateController::class, 'unsaveTemplate']);
-    Route::get('/templates1/used', [UserTemplateController::class, 'usedTemplates']);
-    Route::post('/templates/used/{slug}', [UserTemplateController::class, 'useTemplate']);
-    Route::delete('/templates/used/{slug}', [UserTemplateController::class, 'unuseTemplate']);
-    Route::get('/templates/{slug}/status', [UserTemplateController::class, 'showWithStatus']);
-    Route::get('/templates2', [UserTemplateController::class, 'userTemplatesWithStatus']);
-    Route::get('/templates1/boughted', [UserTemplateController::class, 'fetchBoughted']);
-    Route::post('/payment/submit', [UserTemplateController::class, 'submit']);
+        Route::get('/used', [UserTemplateController::class, 'usedTemplates']);
+        Route::post('/used/{slug}', [UserTemplateController::class, 'useTemplate']);
+        Route::delete('/used/{slug}', [UserTemplateController::class, 'unuseTemplate']);
 
-    // Template unlocks
+        Route::get('/{slug}/status', [UserTemplateController::class, 'showWithStatus']);
+        Route::get('/', [UserTemplateController::class, 'userTemplatesWithStatus']);
+        Route::get('/bought', [UserTemplateController::class, 'fetchBoughted']); // renamed for clarity
+        Route::post('/payment/submit', [UserTemplateController::class, 'submit']);
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Template Unlocks
+    |--------------------------------------------------------------------------
+    */
     Route::get('/template-unlocks', [TemplateUnlockController::class, 'index']);
 
-    // Payments & proofs
-    Route::post('/payment-proofs', [PaymentProofController::class, 'store']);
-    Route::get('/payment-proofs', [PaymentProofController::class, 'index']); // Admin only
-    Route::post('/payment-proofs/{id}/approve', [PaymentProofController::class, 'approve']);
-    Route::post('/payment-proofs/{id}/decline', [PaymentProofController::class, 'decline']);
+    /*
+    |--------------------------------------------------------------------------
+    | Payment Proofs
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('payment-proofs')->group(function () {
+        Route::post('/', [PaymentProofController::class, 'store']);
+        Route::get('/', [PaymentProofController::class, 'index']); // admin only
+        Route::post('/{id}/approve', [PaymentProofController::class, 'approve']);
+        Route::post('/{id}/decline', [PaymentProofController::class, 'decline']);
+    });
 
-    // Admin routes
-    Route::get('/admin/users', [AuthController::class, 'index']);
-    Route::get('/admin/user/{id}', [AuthController::class, 'getUserById']);
-    Route::get('/admin/payments', [AdminPaymentController::class, 'index']);
-    Route::post('/admin/payments/{id}/approve', [AdminPaymentController::class, 'approve']);
-    Route::post('/admin/payments/{id}/disapprove', [AdminPaymentController::class, 'disapprove']);
-    Route::get('/admin/payments/count', [AdminPaymentController::class, 'count']);
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('admin')->group(function () {
+        // Users
+        Route::get('/users', [AuthController::class, 'index']);
+        Route::get('/user/{id}', [AuthController::class, 'getUserById']);
 
-    // Stats
+        // Payments
+        Route::get('/payments', [AdminPaymentController::class, 'index']);
+        Route::post('/payments/{id}/approve', [AdminPaymentController::class, 'approve']);
+        Route::post('/payments/{id}/disapprove', [AdminPaymentController::class, 'disapprove']);
+        Route::get('/payments/count', [AdminPaymentController::class, 'count']);
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Stats
+    |--------------------------------------------------------------------------
+    */
     Route::get('/stats/templates-count', function () {
         $thisMonth = Template::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
@@ -99,11 +135,13 @@ Route::get('/profile/user/used-templates', [UserTemplateController::class, 'used
         $lastMonth = Template::whereMonth('created_at', now()->subMonth()->month)
             ->whereYear('created_at', now()->subMonth()->year)
             ->count();
+
         return response()->json([
             'count' => Template::count(),
             'change' => $thisMonth - $lastMonth
         ]);
     });
+
     Route::get('/stats/revenue', [StatsController::class, 'revenue']);
     Route::get('/stats/pending-payments', [StatsController::class, 'pendingPayments']);
     Route::get('/stats/user-growth', [StatsController::class, 'userGrowth']);
